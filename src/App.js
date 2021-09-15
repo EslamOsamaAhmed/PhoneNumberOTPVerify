@@ -11,6 +11,7 @@ import {
 
 function App() {
   const [getState, setState] = useState(true);
+  const [getNo, setNo] = useState(null);
 
   const firebaseConfig = {
     apiKey: "AIzaSyBjmao3OGcbWLFxeOEucG70CoYWucDumtA",
@@ -25,24 +26,28 @@ function App() {
   const app = initializeApp(firebaseConfig);
 
   const clickHandle = () => {
-    setState(false)
+    setState(false);
     const auth = getAuth();
     auth.languageCode = "en";
 
-    window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
-      'size': 'normal',
-      'callback': (response) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-        // ...
-        console.log(response);
+    window.recaptchaVerifier = new RecaptchaVerifier(
+      "recaptcha-container",
+      {
+        size: "normal",
+        callback: (response) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+          // ...
+          console.log(response);
+        },
+        "expired-callback": () => {
+          // Response expired. Ask user to solve reCAPTCHA again.
+          // ...
+        },
       },
-      'expired-callback': () => {
-        // Response expired. Ask user to solve reCAPTCHA again.
-        // ...
-      }
-    }, auth);
+      auth
+    );
 
-    const phoneNumber = "+201097782537";
+    const phoneNumber = "+" + getNo;
     const appVerifier = window.recaptchaVerifier;
 
     signInWithPhoneNumber(auth, phoneNumber, appVerifier)
@@ -51,17 +56,21 @@ function App() {
         // user in with confirmationResult.confirm(code).
         console.log(confirmationResult);
         let code = prompt("Enter OTP Code", "");
-        confirmationResult.confirm(code).then((res) =>{
+        confirmationResult
+          .confirm(code)
+          .then((res) => {
             console.log(res);
             alert("Phone Number is verified");
             window.location.reload();
-        }).catch((error) => {
-          console.log(error);
-        })
+          })
+          .catch((error) => {
+            alert("Something Went Worng");
+          });
         // ...
       })
       .catch((error) => {
         console.log(error);
+        alert("Something Went Worng");
         // Error; SMS not sent
         // ...
       });
@@ -71,14 +80,21 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Phone Number Verfication OTP Testing
-        </p>
+        <p>Phone Number Verfication OTP Testing</p>
 
-        {getState == true ? <button className="btn" onClick={clickHandle}>
-          Click Here for Recaptcha Verification
-        </button> : null}
-        
+        {getState == true ? (
+          <div className="d-block">
+            <div className = "mb-3">
+              <input className="form-control" placeholder = "(Country Code) Phone Number" type = "number" onChange = {(e) => {setNo(e.target.value)}}/>
+            </div>
+
+            <div className="mb-3">
+              <button className="btn btn-success" onClick={clickHandle}>
+                Click Here for Recaptcha Verification
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div id="recaptcha-container"></div>
       </header>
